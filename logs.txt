@@ -1,0 +1,4 @@
+Usage: streamlit run [OPTIONS] TARGET [ARGS]...
+Try 'streamlit run --help' for help.
+
+Error: No such option: --logger.leve (Possible options: --logger.enableRich, --logger.level, --logger.messageFormat)

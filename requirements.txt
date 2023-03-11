@@ -1,0 +1,4 @@
+openai==0.26.4
+pdfplumber==0.7.6
+streamlit==1.17.0
+streamlit-chat==0.0.2.2
