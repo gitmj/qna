@@ -181,8 +181,8 @@ with st.container():
   # title = "Chatbot with important attribute extraction!!"
   # st.title(title)
 
-  # if check_password():
-  if True: 
+  if check_password():
+  # if True: 
     st.sidebar.button(label="Start Over",
       type="primary",
       on_click=start_over)   
