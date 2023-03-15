@@ -88,41 +88,75 @@ def start_over():
     del st.session_state[key]
   return
 
+# streamlit_app.py
+
+import streamlit as st
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error.
+        st.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Password incorrect")
+        return False
+    else:
+        # Password correct.
+        return True
+
+
 # Render main page
 with st.container():
   # title = "Chatbot with important attribute extraction!!"
   # st.title(title)
 
-  st.sidebar.button(label="Start Over",
-    type="primary",
-    on_click=start_over)   
+  if check_password():
+    st.sidebar.button(label="Start Over",
+      type="primary",
+      on_click=start_over)   
 
-  user_input = get_text()
+    user_input = get_text()
 
-  if user_input:
-      st.session_state.past.append(user_input)
-      prompt = prompt_tunning()
-      if prompt != None:
-        print ("Here is what I am sending:")
-        print (prompt)
-        response = generate_response(prompt)
+    if user_input:
+        st.session_state.past.append(user_input)
+        prompt = prompt_tunning()
+        if prompt != None:
+          print ("Here is what I am sending:")
+          print (prompt)
+          response = generate_response(prompt)
 
-        print ("Here is what I got:")
-        print (response)
-        st.session_state.generated.append(response)
+          print ("Here is what I got:")
+          print (response)
+          st.session_state.generated.append(response)
 
-        # Output in a iframe
-        # query = response.split(" ", 1)[1]
-        query = response
+          # Output in a iframe
+          # query = response.split(" ", 1)[1]
+          query = response
 
-        print(query)
-        source = "https://www.homedepot.com/s/"
+          print(query)
+          source = "https://www.homedepot.com/s/"
 
-        components.iframe(f"{source}{query}", height=2000, scrolling=True)
+          components.iframe(f"{source}{query}", height=2000, scrolling=True)
 
-  if st.session_state['generated']:
-      for i in range(len(st.session_state['generated'])-1, -1, -1):
-        with st.sidebar:
-          message(st.session_state["generated"][i], key=str(i))
-          message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
+    if st.session_state['generated']:
+        for i in range(len(st.session_state['generated'])-1, -1, -1):
+          with st.sidebar:
+            message(st.session_state["generated"][i], key=str(i))
+            message(st.session_state['past'][i], is_user=True, key=str(i) + '_user')
 
