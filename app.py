@@ -13,6 +13,8 @@ import openai_wrapper
 import streamlit as st
 from streamlit_chat import message
 
+import pdfplumber
+
 # Configure logger
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
@@ -24,10 +26,16 @@ if 'generated' not in st.session_state:
   st.session_state['generated'] = []
 
 if 'past' not in st.session_state:
-    st.session_state['past'] = []
+  st.session_state['past'] = []
 
 if 'input_text' not in st.session_state:
-    st.session_state['input_text'] = []
+  st.session_state['input_text'] = []
+
+if 'pdf_file' not in st.session_state:
+  st.session_state['pdf_file'] = '' 
+
+if 'pdf_text' not in st.session_state:
+  st.session_state['pdf_text'] = '' 
 
 if "text_error" not in st.session_state:
   st.session_state.text_error = ""
@@ -53,6 +61,37 @@ def prompt_tunning():
   prompt = "Instructions: Generate search query based on following series of user search session. Don't output false content. Don't write 'Search query:' directly start the answer. \n"
   for i in range(len(st.session_state['past'])):
       prompt = prompt + st.session_state['past'][i] + ","
+
+  num_prompt_words = len(prompt.split())
+  if (num_prompt_words > max_context_size):
+    print ("Error: prompt too big")
+    err_str = f"Prompt too big to handle: {num_prompt_words}"
+    st.session_state.text_error = err_str
+    logging.info(err_str)
+    st.error(err_str)
+    return None
+
+  return prompt
+
+def prompt_tunning_for_qna():
+  if len(st.session_state["past"]) == 0:
+    return None
+
+  prompt = ""
+  prompt += 'search results:\n\n'
+  prompt += st.session_state['pdf_text']
+
+  prompt += "Instructions: Compose a reply to the query using the search results given."\
+              "Cite each reference using [text]."\
+              "Citation should be done at the end of each sentence. If the search results mention multiple subjects"\
+              "with the same name, create separate answers for each. Only include information found in the results and"\
+              "don't add any additional information. Make sure the answer is correct and don't output false content."\
+              "If the text does not relate to the query, simply state 'Found Nothing'. Don't write 'Answer:'"\
+              "Directly start the answer.\n"
+    
+
+  last_q_index = len(st.session_state['past'])
+  prompt = prompt + st.session_state['past'][last_q_index - 1]
 
   num_prompt_words = len(prompt.split())
   if (num_prompt_words > max_context_size):
@@ -120,22 +159,51 @@ def check_password():
         # Password correct.
         return True
 
+max_pdf_pages = 5
+def pdf_upload_callback():
+  pdf_text = ""
+  with pdfplumber.open(st.session_state["pdf_file"]) as pdf:
+      pages = pdf.pages
+      if (len(pages) > max_pdf_pages):
+        st.session_state.text_error = "PDF too long." + " Max supported page: " + str(max_pdf_pages)
+        logging.info(f"File name: {st.session_state['pdf_file']} too big\n")
+        st.error(st.session_state.text_error)
+        return ""
+      for p in pages:
+          pdf_text = pdf_text + p.extract_text()
+  logging.info("Number of words in resume: " + str(len(pdf_text.split())))
+  st.session_state["pdf_text"] = pdf_text
+  return 
+  
 
 # Render main page
 with st.container():
   # title = "Chatbot with important attribute extraction!!"
   # st.title(title)
 
-  if check_password():
+  # if check_password():
+  if True: 
     st.sidebar.button(label="Start Over",
       type="primary",
       on_click=start_over)   
 
+    q_n_a = st.sidebar.radio("QnA mode?", ('Yes','No'), index = 1, horizontal=True)
+
     user_input = get_text()
+
+    if q_n_a == "Yes":
+      st.write ("developing")
+      source_file = st.file_uploader("Choose your .pdf file", type="pdf",
+        on_change=pdf_upload_callback, key="pdf_file")
 
     if user_input:
         st.session_state.past.append(user_input)
-        prompt = prompt_tunning()
+
+        if q_n_a == "Yes":
+          prompt = prompt_tunning_for_qna()
+        else:
+          prompt = prompt_tunning()
+
         if prompt != None:
           print ("Here is what I am sending:")
           print (prompt)
@@ -148,11 +216,12 @@ with st.container():
           # Output in a iframe
           # query = response.split(" ", 1)[1]
           query = response
-
           print(query)
-          source = "https://www.homedepot.com/s/"
 
-          components.iframe(f"{source}{query}", height=2000, scrolling=True)
+          if q_n_a == "No":
+            source = "https://www.homedepot.com/s/"
+
+            components.iframe(f"{source}{query}", height=2000, scrolling=True)
 
     if st.session_state['generated']:
         for i in range(len(st.session_state['generated'])-1, -1, -1):
