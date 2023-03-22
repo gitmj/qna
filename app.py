@@ -15,10 +15,15 @@ from streamlit_chat import message
 
 import pdfplumber
 
+# for custom search engine
+from settings import *
+from urllib.parse import quote_plus
+import requests
+
 # Configure logger
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
-st.set_page_config(page_title="Chat bot with attribute extraction", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="AMA (Ask me anything) bot", page_icon="🤖", layout="wide")
 
 max_context_size = 4096
 
@@ -174,15 +179,34 @@ def pdf_upload_callback():
   logging.info("Number of words in resume: " + str(len(pdf_text.split())))
   st.session_state["pdf_text"] = pdf_text
   return 
-  
+ 
+def search_api(query, pages=int(RESULT_COUNT/10)):
+    results = []
+    for i in range(0, pages):
+        start = i*10+1
+        url = SEARCH_URL.format(
+            key=SEARCH_KEY,
+            cx=SEARCH_ID,
+            query=quote_plus(query),
+            start=start
+        )
+        response = requests.get(url)
+        data = response.json()
+        results += data["items"]
+    #res_df = pd.DataFrame.from_dict(results)
+    #res_df["rank"] = list(range(1, res_df.shape[0] + 1))
+    #res_df = res_df[["link", "rank", "snippet", "title"]]
+    # return res_df
+    return results
 
 # Render main page
 with st.container():
   # title = "Chatbot with important attribute extraction!!"
   # st.title(title)
 
-  if check_password():
-  # if True: 
+
+  # if check_password():
+  if True: 
     st.sidebar.button(label="Start Over",
       type="primary",
       on_click=start_over)   
@@ -192,9 +216,16 @@ with st.container():
     user_input = get_text()
 
     if q_n_a == "Yes":
-      st.write ("developing")
       source_file = st.file_uploader("Choose your .pdf file", type="pdf",
         on_change=pdf_upload_callback, key="pdf_file")
+
+      # testing with custome search engine
+      components.html(
+      """
+      <script async src="https://cse.google.com/cse.js?cx=a1d56ddb055014350">
+      </script>
+      <div class="gcse-search"></div>
+      """, height=1600, scrolling=True)
 
     if user_input:
         st.session_state.past.append(user_input)
@@ -219,9 +250,12 @@ with st.container():
           print(query)
 
           if q_n_a == "No":
-            source = "https://www.homedepot.com/s/"
-
-            components.iframe(f"{source}{query}", height=2000, scrolling=True)
+            # iframe solution based on composite query
+            # source = "https://www.homedepot.com/s/"
+            # components.iframe(f"{source}{query}", height=2000, scrolling=True)
+            results = search_api("door")
+            st.write(results)
+            
 
     if st.session_state['generated']:
         for i in range(len(st.session_state['generated'])-1, -1, -1):

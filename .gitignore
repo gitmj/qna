@@ -131,3 +131,4 @@ dmypy.json
 #Streamlit secret
 .streamlit/secrets.toml
 logs.txt
+private.py
