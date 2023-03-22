@@ -3,6 +3,7 @@
 # Import from standard library
 import os
 import logging
+import time
 
 # Import from 3rd party libraries
 import openai
@@ -56,7 +57,10 @@ class Openai:
             "presence_penalty": 0,  # default
         }   
         try:
+            start_time = time.time()
             response = openai.Completion.create(**kwargs)
+            end_time = time.time()
+            logging.info(f"complete api latency:{end_time - start_time}")
             return (response["choices"][0]["text"], response["usage"]["total_tokens"])
 
         except Exception as e:
