@@ -1,7 +1,7 @@
 import streamlit as st
 
 
-def session_state_init():
+def init():
     if 'generated' not in st.session_state:
         st.session_state['generated'] = []
 
@@ -10,9 +10,6 @@ def session_state_init():
 
     if 'input_text' not in st.session_state:
         st.session_state['input_text'] = []
-
-    if 'pdf_file' not in st.session_state:
-        st.session_state['pdf_file'] = ''
 
     if 'pdf_text' not in st.session_state:
         st.session_state['pdf_text'] = ''
