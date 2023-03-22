@@ -23,7 +23,7 @@ import requests
 # Configure logger
 logging.basicConfig(format="\n%(asctime)s\n%(message)s", level=logging.INFO, force=True)
 
-st.set_page_config(page_title="AMA (Ask me anything) bot", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="AMA (Ask me anything) bot about this product", page_icon="🤖", layout="wide")
 
 max_context_size = 4096
 
