@@ -184,7 +184,7 @@ with st.container():
             source_file = st.file_uploader("Choose your .pdf file", type="pdf",
                                            on_change=pdf_upload_callback, key="pdf_file")
 
-            # testing with custome search engine
+            # testing with custom search engine
             components.html(
                 """
                 <script async src="https://cse.google.com/cse.js?cx=a1d56ddb055014350">
