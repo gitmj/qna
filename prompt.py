@@ -1,5 +1,6 @@
-import streamlit as st
 import logging
+
+import streamlit as st
 
 from settings import *
 
@@ -21,7 +22,9 @@ def qna_prompt() -> str:
     return "Instructions: Compose a reply to the query using the context given. \n" \
            "Only include information found in the context and don't add any additional information. \n" \
            "Make sure answer is correct and don't output false content. \n" \
-            "If the question does not relate to the given context, simply state 'Didn't find anything in the page' \n"
+           "If the question does not relate to the given context, simply state 'Didn't find anything in the page' \n" \
+           "Always include a 'Source' section in your answer which is the reference text from context used to answer" \
+           "the question. \n"
 
 
 def check_prompt_size(prompt):
